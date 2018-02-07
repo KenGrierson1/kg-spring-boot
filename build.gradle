@@ -1,0 +1,77 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
+        classpath 'net.wasdev.wlp.gradle.plugins:liberty-gradle-plugin:2.1'
+
+    }
+}
+
+ext {
+    appName = project.name
+    warContext = appName
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'war'
+apply plugin: 'liberty'
+
+war {
+    baseName = 'gs-spring-boot'
+    version =  '0.1.0'
+}
+
+/*
+jar {
+    baseName = 'gs-spring-boot'
+    version =  '0.1.0'
+}
+*/
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    compile 'org.springframework.boot:spring-boot-starter-jersey'
+    // tag::actuator[]
+    compile 'org.springframework.boot:spring-boot-starter-actuator'
+    // end::actuator[]
+    // tag::tests[]
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+    testCompile 'commons-httpclient:commons-httpclient:3.1'
+    testCompile 'junit:junit:4.12'
+    // end::tests[]
+
+    //providedRuntime 'javax:javaee-api:7.0'
+    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+
+    libertyRuntime 'io.openliberty:openliberty-runtime:[17.0.0.4,)'
+}
+
+liberty {
+    server {
+        name = "${appName}Server"
+        configFile = file("src/main/liberty/config/server.xml")
+        bootstrapProperties = ['default.http.port': 9080,
+                               'default.https.port': 9443,
+                               'app.context.root': warContext]
+        packageLiberty {
+            archive = "$buildDir/${appName}.zip"
+            include = "usr"
+        }
+    }
+}
+
